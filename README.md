@@ -1,16 +1,114 @@
-# React + Vite
+# Takaatuf Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend application for the Takaatuf platform built with React and Vite.
 
-Currently, two official plugins are available:
+## 🚀 Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React
+- Vite
+- React Router DOM
+- Context API
+- React Bootstrap
+- Bootstrap
+- Axios
 
-## React Compiler
+## ✨ Features
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Authentication (Login)
+- Role-based access control
+- Protected routes and guards
+- Profile completion flow
+- Clean and scalable project structure
 
-## Expanding the ESLint configuration
+## 📁 Project Structure
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+src/
+├── app/
+│ ├── routes/
+│ │ ├── index.jsx # AppRoutes
+│ │ ├── public.routes.jsx
+│ │ ├── auth.routes.jsx
+│ │ ├── dashboard.routes.jsx
+│ │ └── system.routes.jsx
+│ └── providers/
+│ └── AppProviders.jsx # Providers wrapper
+│
+├── layouts/
+│ ├── AppLayout.jsx  
+│ ├── AuthLayout.jsx  
+│ └── DashboardLayout.jsx  
+│
+├── features/
+│ ├── auth/
+│ │ ├── context/
+│ │ │ └── AuthContext.jsx
+│ │ ├── guards/
+│ │ │ ├── RequireAuth.jsx
+│ │ │ ├── RequireRole.jsx
+│ │ │ ├── RedirectIfAuth.jsx
+│ │ │ └── RequireProfileIncomplete.jsx
+│ │ ├── pages/
+│ │ │ └── LoginPage.jsx
+│ │ ├── services/
+│ │ │ └── authApi.js # طلبات auth
+│ │ └── utils/
+│ │ └── authStorage.js # localStorage helpers
+│ │
+│ └── profile/
+│ └── pages/
+│ └── CompleteProfilePage.jsx
+│
+├── pages/
+│ ├── public/
+│ │ ├── PublicRequestsPage.jsx
+│ │ └── PublicRequestDetailsPage.jsx
+│ ├── dashboards/
+│ │ ├── RequesterDashboardPage.jsx
+│ │ └── VolunteerDashboardPage.jsx
+│ └── system/
+│ └── NotFoundPage.jsx
+│
+├── components/
+│ ├── navigation/
+│ │ └── Topbar.jsx
+│ └── ui/
+│ └── RouteLoader.jsx
+│
+├── constants/
+│ ├── routes.js # ROUTES
+│ └── storageKeys.js  
+│
+├── services/
+│ ├── http.js # axios instance
+│ └── api.js # تجميع endpoints
+│
+├── hooks/
+│ └── useSomething.js  
+│
+├── utils/
+│ ├── guards.js  
+│ └── path.js # fullPath helpers
+│
+├── styles/
+│ └── globals.css
+│
+├── assets/
+│
+├── App.jsx
+└── main.jsx
+
+Authentication & Authorization:-
+
+- Login flow implemented using Context API
+
+- Role-based guards to control access to routes
+
+- Unauthorized users are redirected appropriately
+
+Notes:-
+
+- Project follows modular and feature-based structure
+
+- Routes and layouts are separated for better scalability
+
+- Ready for future expansion and additional features
