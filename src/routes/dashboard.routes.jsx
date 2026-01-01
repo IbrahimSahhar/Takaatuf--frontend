@@ -1,5 +1,6 @@
-import { Route } from "react-router-dom";
+import { Route, Navigate } from "react-router-dom";
 import { ROUTES } from "../constants";
+import { ROLES } from "../constants/roles";
 
 /* Layouts */
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -10,6 +11,9 @@ import RequireRole from "../features/auth/guards/RequireRole";
 import RequireProfileComplete from "../features/auth/guards/RequireProfileComplete";
 import RequireLocationConfirmed from "../features/auth/guards/RequireLocationConfirmed";
 
+/* Auth */
+import { useAuth } from "../features/auth/context/AuthContext";
+
 /* Lazy Pages */
 import { P } from "./lazyPages";
 
@@ -17,17 +21,35 @@ import { P } from "./lazyPages";
 const APP_REQUESTS = `${ROUTES.DASH_REDIRECT}/requests`;
 const APP_REQUEST_DETAILS = `${ROUTES.DASH_REDIRECT}/requests/:id`;
 
+function AppIndexRedirect() {
+  const { role } = useAuth();
+
+  const to =
+    role === ROLES.ADMIN
+      ? ROUTES.DASH_ADMIN
+      : role === ROLES.KP
+      ? ROUTES.DASH_KP
+      : ROUTES.DASH_REQUESTER; //  KR (Outside Gaza)
+
+  return <Navigate to={to} replace />;
+}
+
 export const dashboardRoutes = () => {
   const roleDashboards = [
     {
       path: ROUTES.DASH_REQUESTER,
-      role: "requester",
+      //  requester dashboard should allow KR (canonical) and REQUESTER (legacy)
+      allow: [ROLES.KR, ROLES.REQUESTER],
       element: <P.RequesterDashboardPage />,
     },
-    { path: ROUTES.DASH_KP, role: "kp", element: <P.KPDashboardPage /> },
+    {
+      path: ROUTES.DASH_KP,
+      allow: [ROLES.KP],
+      element: <P.KPDashboardPage />,
+    },
     {
       path: ROUTES.DASH_ADMIN,
-      role: "admin",
+      allow: [ROLES.ADMIN],
       element: <P.AdminDashboardPage />,
     },
   ];
@@ -50,11 +72,14 @@ export const dashboardRoutes = () => {
         </RequireAuth>
       }
     >
+      {/* app should always land on the correct dashboard */}
+      <Route path={ROUTES.DASH_REDIRECT} element={<AppIndexRedirect />} />
+
       {roleDashboards.map((r) => (
         <Route
           key={r.path}
           path={r.path}
-          element={<RequireRole allow={[r.role]}>{r.element}</RequireRole>}
+          element={<RequireRole allow={r.allow}>{r.element}</RequireRole>}
         />
       ))}
 

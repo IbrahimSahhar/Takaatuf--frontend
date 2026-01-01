@@ -19,6 +19,8 @@ export const ROUTES = Object.freeze({
   DASH_KP: "/app/dashboard/kp",
   DASH_ADMIN: "/app/dashboard/admin",
 
+  DASH_KR: "/app/dashboard/requester",
+
   // System
   FORBIDDEN: "/403",
   NOT_FOUND: "*",

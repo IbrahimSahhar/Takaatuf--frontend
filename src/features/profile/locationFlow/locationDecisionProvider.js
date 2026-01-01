@@ -4,13 +4,13 @@ export const LOCATION_STATUS = Object.freeze({
   UNKNOWN: "UNKNOWN",
 });
 
-/**
- * Mock Decision Provider (single place)
- *
- * Control from .env:
- * VITE_LOCATION_STATUS=match | mismatch | unknown
- *
- * Default: unknown
+/*
+  Mock Decision Provider (single place)
+ 
+ Control from .env:
+ VITE_LOCATION_STATUS=match | mismatch | unknown
+ 
+  Default: unknown
  */
 export async function getLocationDecision() {
   const v = (import.meta.env.VITE_LOCATION_STATUS || "unknown").toLowerCase();

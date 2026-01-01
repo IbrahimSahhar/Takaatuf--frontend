@@ -10,15 +10,21 @@ export default function RequireLocationConfirmed({ children }) {
 
   if (isHydrating) return null;
 
-  if (requiresLocationConfirmation) {
-    const from = encodeURIComponent(fullPath(location));
+  if (location.pathname === ROUTES.CONFIRM_LOCATION) {
+    return children;
+  }
 
-    return (
-      <Navigate
-        to={`${ROUTES.CONFIRM_LOCATION}?reason=unknown&from=${from}`}
-        replace
-      />
-    );
+  if (requiresLocationConfirmation) {
+    const fromRaw = fullPath(location);
+
+    const from =
+      fromRaw && fromRaw !== ROUTES.CONFIRM_LOCATION
+        ? encodeURIComponent(fromRaw)
+        : "";
+
+    const qs = from ? `?reason=unknown&from=${from}` : `?reason=unknown`;
+
+    return <Navigate to={`${ROUTES.CONFIRM_LOCATION}${qs}`} replace />;
   }
 
   return children;

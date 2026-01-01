@@ -8,7 +8,11 @@ import { sidebarLinksByRole } from "../features/dashboards/config/sidebarLinks";
 export default function DashboardLayout() {
   const { role } = useAuth();
 
-  const navLinks = sidebarLinksByRole[role] || [];
+  const navLinks =
+    sidebarLinksByRole[role] ||
+    (String(role || "").toLowerCase() === "kr"
+      ? sidebarLinksByRole["requester"] || []
+      : []);
 
   return (
     <>

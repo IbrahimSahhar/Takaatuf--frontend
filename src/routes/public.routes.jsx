@@ -4,9 +4,6 @@ import { ROUTES } from "../constants";
 /* Layouts */
 import PublicLayout from "../layouts/PublicLayout";
 
-/* Guards */
-import RedirectAuthedToAppRequests from "../features/auth/guards/RedirectAuthedToAppRequests";
-
 /* Lazy Pages */
 import { P } from "./lazyPages";
 
@@ -20,13 +17,7 @@ export const publicRoutes = () => {
   ];
 
   return (
-    <Route
-      element={
-        <RedirectAuthedToAppRequests>
-          <PublicLayout />
-        </RedirectAuthedToAppRequests>
-      }
-    >
+    <Route element={<PublicLayout />}>
       {routes.map((r) => (
         <Route key={r.path} path={r.path} element={r.element} />
       ))}

@@ -11,16 +11,144 @@ import {
 /* Auth Context */
 const AuthContext = createContext(null);
 
+/*  Profile helpers  */
+const LS_PROFILE_COMPLETE_KEY = "profile_complete_mock";
+
+/* Role helpers */
+const normalizeRole = (role) =>
+  String(role || "")
+    .toLowerCase()
+    .trim();
+
+/*
+   Canonical roles across the app:
+   kp = Gaza
+   kr = Outside Gaza
+ */
+const canonicalizeRole = (role) => {
+  const r = normalizeRole(role);
+
+  if (r === "kp" || r === "kr") return r;
+
+  // Provider aliases → kp (Gaza)
+  if (r === "knowledge_provider" || r === "provider") return "kp";
+
+  // Requester aliases → kr (Outside Gaza)
+  if (r === "knowledge_requester" || r === "requester") return "kr";
+
+  return r || "";
+};
+
+const get = (obj, ...keys) => {
+  for (const k of keys) {
+    if (obj && obj[k] != null && obj[k] !== "") return obj[k];
+  }
+  return null;
+};
+
+const isNonEmpty = (v) => v != null && String(v).trim().length > 0;
+
+const validateWalletAddress = (type, address) => {
+  const t = String(type || "").toLowerCase();
+  const a = String(address || "").trim();
+
+  if (!a) return false;
+
+  if (t === "ethereum") return /^0x[a-fA-F0-9]{40}$/.test(a);
+  if (t === "bitcoin")
+    return (
+      /^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(a) ||
+      /^bc1[ac-hj-np-z02-9]{25,90}$/.test(a)
+    );
+  if (t === "solana") return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(a);
+
+  return true;
+};
+
+const computeMissingProfileFields = (u) => {
+  const missing = [];
+
+  const name = get(u, "name", "fullName", "full_name");
+  const city = get(
+    u,
+    "city",
+    "neighborhood",
+    "cityNeighborhood",
+    "city_neighborhood"
+  );
+
+  if (!isNonEmpty(name)) missing.push("name");
+  if (!isNonEmpty(city)) missing.push("city_neighborhood");
+
+  const role = canonicalizeRole(get(u, "role"));
+  if (!role) missing.push("role");
+
+  // Role-based requirements
+  if (role === "kp") {
+    const walletType = get(
+      u,
+      "walletType",
+      "wallet_type",
+      "cryptoWalletType",
+      "crypto_wallet_type"
+    );
+    const walletAddress = get(
+      u,
+      "walletAddress",
+      "wallet_address",
+      "cryptoWalletAddress",
+      "crypto_wallet_address"
+    );
+
+    if (!isNonEmpty(walletType)) missing.push("wallet_type");
+    if (!isNonEmpty(walletAddress)) missing.push("wallet_address");
+
+    if (isNonEmpty(walletType) && isNonEmpty(walletAddress)) {
+      if (!validateWalletAddress(walletType, walletAddress)) {
+        missing.push("wallet_address_invalid");
+      }
+    }
+  }
+
+  if (role === "kr") {
+    const paypal = get(
+      u,
+      "paypalAccount",
+      "paypal_account",
+      "paypalEmail",
+      "paypal_email"
+    );
+    if (!isNonEmpty(paypal)) missing.push("paypal_account");
+  }
+
+  return missing;
+};
+
+const computeProfileComplete = (u) => {
+  const backendFlag = get(
+    u,
+    "profile_complete",
+    "profileComplete",
+    "profile_completed"
+  );
+  if (typeof backendFlag === "boolean") return backendFlag;
+
+  const missing = computeMissingProfileFields(u);
+  const isComplete = missing.length === 0;
+
+  const ls = localStorage.getItem(LS_PROFILE_COMPLETE_KEY);
+  if (ls === "true" || ls === "false") return ls === "true";
+
+  return isComplete;
+};
+
 /* Provider */
 export function AuthProvider({ children }) {
-  /* Initial sync load */
   const initial = loadAuth();
 
   const [token, setToken] = useState(initial?.token ?? null);
   const [user, _setUser] = useState(initial?.user ?? null);
   const [expiresAt, setExpiresAt] = useState(initial?.expiresAt ?? null);
-
-  /* Prevent early redirects */
   const [isHydrating, setIsHydrating] = useState(true);
 
   const logout = () => {
@@ -30,25 +158,26 @@ export function AuthProvider({ children }) {
     clearAuth();
   };
 
-  /**
-   * Safe setUser:
-   * - Supports passing an object or an updater function
-   * - Immediately saves to storage if a token and user are present
-   */
   const setUser = (next) => {
     _setUser((prev) => {
       const resolved = typeof next === "function" ? next(prev) : next;
-
-      // if no token or no user, skip saving
       if (!token || !resolved) return resolved;
 
+      const resolvedWithProfile = {
+        ...resolved,
+        role: canonicalizeRole(resolved?.role),
+        profile_complete:
+          typeof resolved?.profile_complete === "boolean"
+            ? resolved.profile_complete
+            : computeProfileComplete(resolved),
+      };
+
       const exp = ensureExpiresAt(expiresAt);
-      saveAuth({ token, user: resolved, expiresAt: exp });
-      return resolved;
+      saveAuth({ token, user: resolvedWithProfile, expiresAt: exp });
+      return resolvedWithProfile;
     });
   };
 
-  //  Helper to set requiresLocationConfirmation flag
   const setRequiresLocationConfirmation = (flag) => {
     setUser((prev) => ({
       ...(prev || {}),
@@ -64,11 +193,20 @@ export function AuthProvider({ children }) {
           return;
         }
 
-        /* Token without user is invalid */
         if (!user) {
           logout();
           setIsHydrating(false);
           return;
+        }
+
+        if (typeof user?.profile_complete !== "boolean") {
+          _setUser((prev) => {
+            if (!prev) return prev;
+            return {
+              ...prev,
+              profile_complete: computeProfileComplete(prev),
+            };
+          });
         }
       } catch {
         logout();
@@ -95,36 +233,57 @@ export function AuthProvider({ children }) {
     }
 
     if (!expiresAt) setExpiresAt(exp);
-    saveAuth({ token, user, expiresAt: exp });
+
+    const userWithProfile = {
+      ...user,
+      role: canonicalizeRole(user?.role),
+      profile_complete:
+        typeof user?.profile_complete === "boolean"
+          ? user.profile_complete
+          : computeProfileComplete(user),
+    };
+
+    saveAuth({ token, user: userWithProfile, expiresAt: exp });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token, user, expiresAt]);
 
   const login = ({ token: t, user: u }) => {
     const exp = makeExpiresAt();
 
-    // VITE_REQUIRE_LOC_CONFIRM=true
     const requireLoc =
       String(import.meta.env.VITE_REQUIRE_LOC_CONFIRM || "").toLowerCase() ===
       "true";
 
     const userWithFlags = {
       ...(u || {}),
+      role: canonicalizeRole(u?.role),
       requiresLocationConfirmation:
         typeof u?.requiresLocationConfirmation === "boolean"
           ? u.requiresLocationConfirmation
           : requireLoc,
     };
 
+    const userWithProfile = {
+      ...userWithFlags,
+      profile_complete:
+        typeof userWithFlags?.profile_complete === "boolean"
+          ? userWithFlags.profile_complete
+          : computeProfileComplete(userWithFlags),
+    };
+
     setToken(t);
-    _setUser(userWithFlags);
+    _setUser(userWithProfile);
     setExpiresAt(exp);
-    saveAuth({ token: t, user: userWithFlags, expiresAt: exp });
+    saveAuth({ token: t, user: userWithProfile, expiresAt: exp });
   };
 
   const value = useMemo(() => {
     const requiresLocationConfirmation = Boolean(
       user?.requiresLocationConfirmation
     );
+
+    const missingProfileFields = user ? computeMissingProfileFields(user) : [];
+    const profileComplete = Boolean(user && computeProfileComplete(user));
 
     return {
       token,
@@ -133,7 +292,9 @@ export function AuthProvider({ children }) {
 
       isAuthenticated: Boolean(token && user),
       role: user?.role ?? null,
-      profileComplete: Boolean(user?.profile_complete),
+
+      profileComplete,
+      missingProfileFields,
 
       requiresLocationConfirmation,
       setRequiresLocationConfirmation,

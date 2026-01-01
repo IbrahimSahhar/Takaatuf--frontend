@@ -1,13 +1,13 @@
 import { useMemo, useState } from "react";
 import { Modal, Button, Form, Alert, Spinner } from "react-bootstrap";
 
-/**
- * Props:
- * - show: boolean
- * - reason: "MISMATCH" | "UNKNOWN"
- * - onConfirm: (choice: "IN_GAZA" | "OUTSIDE_GAZA") => Promise<void> | void
- * - onClose: () => void  (optional: if you want to allow closing)
- * - allowClose: boolean  (default false)  <-- acceptance criteria requires an explicit choice
+/*
+  Props:
+ - show: boolean
+ - reason: "MISMATCH" | "UNKNOWN"
+ - onConfirm: (choice: "IN_GAZA" | "OUTSIDE_GAZA") => Promise<void> | void
+ - onClose: () => void  (optional: if you want to allow closing)
+ - allowClose: boolean  (default false)  <-- acceptance criteria requires an explicit choice
  */
 export default function LocationConfirmationModal({
   show,

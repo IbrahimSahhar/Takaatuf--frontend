@@ -30,10 +30,10 @@ export default function Topbar() {
     navigate(ROUTES.LOGIN);
   };
 
-  const hiddenRoutes = [ROUTES.LOGIN, ROUTES.COMPLETE_PROFILE];
+  const hiddenRoutes = [ROUTES.COMPLETE_PROFILE];
 
   if (hiddenRoutes.includes(location.pathname)) {
-    return null; // لا Topbar
+    return null;
   }
   return (
     <Navbar bg="white" className="border-bottom">

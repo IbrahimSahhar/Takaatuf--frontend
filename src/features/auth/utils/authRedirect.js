@@ -2,6 +2,7 @@ import { ROUTES } from "../../../constants/routes";
 import { ROLES } from "../../../constants/roles";
 
 const REDIRECT_KEY = "redirect_after_login";
+const PROFILE_REDIRECT_KEY = "redirect_after_profile";
 
 const fullPath = (path) => (path ? String(path) : path);
 
@@ -16,8 +17,9 @@ export function mapPublicToDashboard(path) {
   if (
     p === ROUTES.PUBLIC_REQUESTS ||
     p.startsWith(`${ROUTES.PUBLIC_REQUESTS}?`)
-  )
+  ) {
     return APP_REQUESTS;
+  }
 
   // /requests/:id OR /requests/:id?x=1
   if (p.startsWith(`${ROUTES.PUBLIC_REQUESTS}/`)) return `${APP_BASE}${p}`;
@@ -32,13 +34,26 @@ export function isPublicRequestsPath(pathname = "") {
   );
 }
 
+/**
+  Canonical role landing:
+ - ADMIN -> admin dashboard
+ - KP (Gaza) -> KP dashboard
+ - KR (Outside Gaza) -> requester dashboard (for now)
+ 
+  Backward compatible:
+- REQUESTER -> same as KR
+ */
 export function roleHome(role) {
-  switch (role) {
+  switch (String(role || "").toLowerCase()) {
     case ROLES.ADMIN:
       return ROUTES.DASH_ADMIN;
+
     case ROLES.KP:
       return ROUTES.DASH_KP;
-    case ROLES.REQUESTER:
+
+    //  Outside Gaza
+    case ROLES.KR:
+    case ROLES.REQUESTER: // backward compatibility
     default:
       return ROUTES.DASH_REQUESTER;
   }
@@ -50,4 +65,10 @@ export function consumeRedirect() {
   return next;
 }
 
-export { REDIRECT_KEY };
+export function consumeProfileRedirect() {
+  const next = localStorage.getItem(PROFILE_REDIRECT_KEY);
+  localStorage.removeItem(PROFILE_REDIRECT_KEY);
+  return next;
+}
+
+export { REDIRECT_KEY, PROFILE_REDIRECT_KEY };

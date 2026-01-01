@@ -43,8 +43,6 @@ export default function () {
   const onSupport = (id) => {
     if (!isAuthenticated) return saveIntendedAndGoLogin();
 
-    /* TODO: Replace with payment/tip flow */
-    // eslint-disable-next-line no-alert
     alert(`Support/Tip flow for request #${id} (Coming soon)`);
   };
 

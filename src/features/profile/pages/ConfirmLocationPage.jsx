@@ -6,8 +6,8 @@ import { ROUTES } from "../../../constants/routes";
 import { ROLES } from "../../../constants/roles";
 import { api } from "../../../services/api";
 
-const roleFromChoice = (choice) =>
-  choice === "IN_GAZA" ? ROLES.REQUESTER : ROLES.KP;
+//  KP = IN_GAZA, KR = OUTSIDE
+const roleFromChoice = (choice) => (choice === "IN_GAZA" ? ROLES.KP : ROLES.KR);
 
 export default function ConfirmLocationPage() {
   const navigate = useNavigate();
