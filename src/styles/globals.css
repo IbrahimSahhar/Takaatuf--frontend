@@ -21,8 +21,6 @@
   color: var(--bs-primary);
 }
 
-
-
 /* =========================
    Login Page
 ========================= */
@@ -30,7 +28,7 @@
 .login-page {
   display: flex;
   justify-content: center;
-  padding: 3rem 1rem; 
+  padding: 3rem 1rem;
   background-color: #f8fafc;
   min-height: calc(100vh - 140px);
 }
@@ -68,11 +66,11 @@
   position: relative;
 }
 
-/* Icon inside the input (no separate box) */
+/* Icon inside the input (fixed position – no jump on error) */
 .login-field__icon {
   position: absolute;
   left: 14px;
-  top: 50%;
+  top: 22px; /* نصف ارتفاع الحقل (44px / 2) */
   transform: translateY(-50%);
   color: #111827;
   opacity: 0.9;
@@ -93,9 +91,14 @@
   border-color: #6366f1;
 }
 
-/* Make bootstrap invalid state still keep our radius/height */
+/* Keep same height & radius in invalid state */
 .login-input.is-invalid {
   border-radius: 12px;
+}
+
+/* Optional: keep space for error message to avoid layout shift */
+.login-field .invalid-feedback {
+  min-height: 18px;
 }
 
 /* Forgot password link */
@@ -129,10 +132,6 @@
 .oauth-btn:hover {
   background: #ffffff;
   border-color: #cbd5e1;
-  color: #111827;
-}
-.oauth-btn:hover {
-
   color: #111827;
 }
 
