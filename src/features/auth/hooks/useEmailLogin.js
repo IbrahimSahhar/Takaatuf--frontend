@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { validateLogin } from "../utils/loginValidation";
 import { mockNetwork } from "../services/authMock.service";
 
-const emptyStatus = { type: "", msg: "" };
+const EMPTY_STATUS = { type: "", msg: "" };
 
 export default function useEmailLogin({
   isBusy,
@@ -14,26 +14,34 @@ export default function useEmailLogin({
   setStatus,
   setLoadingEmail,
 }) {
+  const handleError = (message) => {
+    showMessage("danger", message);
+  };
+
   return useCallback(
     async (e) => {
       e.preventDefault();
       if (isBusy) return;
 
       setSubmitted(true);
-      setStatus(emptyStatus);
+      setStatus(EMPTY_STATUS);
 
-      const err = validateLogin({ email, password });
-      if (err) {
-        showMessage("danger", err);
+      const validationError = validateLogin({ email, password });
+      if (validationError) {
+        handleError(validationError);
         return;
       }
 
       setLoadingEmail(true);
+
       try {
         await mockNetwork(400);
-        await authenticate({ provider: "email", email: email.trim() });
-      } catch {
-        showMessage("danger", "Email login failed. Please try again.");
+        await authenticate({
+          provider: "email",
+          email: email.trim(),
+        });
+      } catch (error) {
+        handleError("Email login failed. Please try again.");
       } finally {
         setLoadingEmail(false);
       }
@@ -43,7 +51,6 @@ export default function useEmailLogin({
       email,
       password,
       authenticate,
-      showMessage,
       setSubmitted,
       setStatus,
       setLoadingEmail,

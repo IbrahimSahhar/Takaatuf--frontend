@@ -1,32 +1,51 @@
-import api from "../../../services/api/index";
+import { api, API_BASE_URL } from "../../../services/api";
+import { canonicalizeRole } from "../context/auth.roles";
 
-const mapAuthResponse = (data) => ({
-  token: data.token,
-  user: {
-    ...data.user,
-    role: data.user.role ?? "user",
-    profileCompleted:
-      data.profile_completed ?? data.user.profile_completed ?? false,
-  },
-  returnUrl: data.returnUrl,
-  message: data.message,
-});
+const safeWindow = () => (typeof window !== "undefined" ? window : null);
 
-/* Helpers */
-const fullPath = () =>
-  `${window.location.pathname}${window.location.search}${window.location.hash}`;
+const getFullPath = () => {
+  const w = safeWindow();
+  if (!w) return "/";
+  return `${w.location.pathname}${w.location.search}${w.location.hash}`;
+};
+
+const mapAuthResponse = (data) => {
+  const rawUser = data?.user || {};
+  const role = canonicalizeRole(rawUser?.role); // kp | kr | ""
+
+  return {
+    token: data?.token,
+    user: {
+      ...rawUser,
+      role,
+      profileCompleted: Boolean(
+        data?.profile_completed ?? rawUser?.profile_completed ?? false
+      ),
+    },
+    message: data?.message,
+  };
+};
 
 export const login = async (credentials) => {
-  const res = await api.post("/login", credentials);
+  const res = await api.login(credentials);
   return mapAuthResponse(res.data);
 };
 
+/** Builds OAuth URL (frontend can decide to redirect) */
+export const buildOAuthRedirectUrl = (provider) => {
+  const returnUrl = encodeURIComponent(getFullPath());
+  return `${API_BASE_URL}/oauth/${provider}/redirect?returnUrl=${returnUrl}`;
+};
+
+/** Keep current behavior: redirect immediately */
 export const loginWithGoogle = () => {
-  const returnUrl = encodeURIComponent(fullPath());
-  window.location.href = `${api.defaults.baseURL}/oauth/google/redirect?returnUrl=${returnUrl}`;
+  const w = safeWindow();
+  if (!w) return;
+  w.location.href = buildOAuthRedirectUrl("google");
 };
 
 export const loginWithFacebook = () => {
-  const returnUrl = encodeURIComponent(fullPath());
-  window.location.href = `${api.defaults.baseURL}/oauth/facebook/redirect?returnUrl=${returnUrl}`;
+  const w = safeWindow();
+  if (!w) return;
+  w.location.href = buildOAuthRedirectUrl("facebook");
 };

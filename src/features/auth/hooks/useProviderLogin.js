@@ -1,6 +1,9 @@
 import { useCallback } from "react";
 import { getProviderIdentity, mockNetwork } from "../services/authMock.service";
 
+const isCancelledError = (err) =>
+  err?.code === "CANCELLED" || err?.message === "CANCELLED";
+
 export default function useProviderLogin({
   isBusy,
   authenticate,
@@ -17,17 +20,19 @@ export default function useProviderLogin({
 
       try {
         await mockNetwork(700);
-        await authenticate(getProviderIdentity(provider));
+
+        const identity = getProviderIdentity(provider);
+        await authenticate(identity);
       } catch (err) {
-        // Cancel case
-        if (err?.code === "CANCELLED" || err?.message === "CANCELLED") {
+        if (isCancelledError(err)) {
           showMessage("info", "Login was cancelled. Please try again.");
-        } else {
-          showMessage(
-            "danger",
-            "Provider authentication failed. Please try again."
-          );
+          return;
         }
+
+        showMessage(
+          "danger",
+          "Provider authentication failed. Please try again."
+        );
       } finally {
         setLoadingProvider(null);
       }

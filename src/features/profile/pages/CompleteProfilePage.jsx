@@ -111,7 +111,7 @@ export default function CompleteProfilePage() {
         next.wallet_address = "Wallet address is invalid.";
     }
 
-    if (selectedRole === ROLES.REQUESTER) {
+    if (selectedRole === ROLES.KR) {
       if (!paypalAccount.trim())
         next.paypal_account = "PayPal account is required.";
     }
@@ -190,7 +190,7 @@ export default function CompleteProfilePage() {
       wallet_type: selectedRole === ROLES.KP ? walletType : undefined,
       wallet_address: selectedRole === ROLES.KP ? walletAddress : undefined,
       paypal_account:
-        selectedRole === ROLES.REQUESTER ? paypalAccount.trim() : undefined,
+        selectedRole === ROLES.KR ? paypalAccount.trim() : undefined,
     };
 
     setPendingPayload(payload);
@@ -230,8 +230,8 @@ export default function CompleteProfilePage() {
       return;
     }
 
-    //  FIX: KP = IN_GAZA, REQUESTER = OUTSIDE
-    const ensuredRole = choice === "IN_GAZA" ? ROLES.KP : ROLES.REQUESTER;
+    //  FIX: KP = IN_GAZA, KR = OUTSIDE
+    const ensuredRole = choice === "IN_GAZA" ? ROLES.KP : ROLES.KR;
 
     const prof = await api.completeProfile({
       ...pendingPayload,
@@ -341,8 +341,8 @@ export default function CompleteProfilePage() {
               <Button
                 type="button"
                 className="flex-fill rounded-2"
-                variant={selectedRole === ROLES.REQUESTER ? "primary" : "light"}
-                onClick={() => setSelectedRole(ROLES.REQUESTER)}
+                variant={selectedRole === ROLES.KR ? "primary" : "light"}
+                onClick={() => setSelectedRole(ROLES.KR)}
                 style={{
                   borderTopLeftRadius: 0,
                   borderBottomLeftRadius: 0,

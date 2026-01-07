@@ -8,44 +8,53 @@ import {
   mapPublicToDashboard,
   roleHome,
 } from "../utils/authRedirect";
-
 import { getOrCreateUser } from "../services/authMock.service";
-
 import { isValidEmail, isValidPassword } from "../utils/validators";
 
 import useProviderLogin from "./useProviderLogin";
 import useEmailLogin from "../hooks/useEmailLogin";
 
-const emptyStatus = { type: "", msg: "" };
+const EMPTY_STATUS = { type: "", msg: "" };
 
 export default function useLoginLogic() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // form
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
+  // ui state
   const [loadingProvider, setLoadingProvider] = useState(null);
   const [loadingEmail, setLoadingEmail] = useState(false);
-  const [status, setStatus] = useState(emptyStatus);
+  const [status, setStatus] = useState(EMPTY_STATUS);
   const [submitted, setSubmitted] = useState(false);
 
-  const showMessage = useCallback((type, msg) => setStatus({ type, msg }), []);
+  const isBusy = useMemo(
+    () => Boolean(loadingProvider) || loadingEmail,
+    [loadingProvider, loadingEmail]
+  );
+
+  const showMessage = useCallback((type, msg) => {
+    setStatus({ type, msg });
+  }, []);
 
   const isEmailValid = useMemo(() => isValidEmail(email), [email]);
   const isPasswordValid = useMemo(() => isValidPassword(password), [password]);
 
-  const isBusy = Boolean(loadingProvider) || loadingEmail;
+  const consumeRedirect = useCallback(() => {
+    const next = localStorage.getItem(REDIRECT_KEY);
+    localStorage.removeItem(REDIRECT_KEY);
+    return next;
+  }, []);
 
   const goNext = useCallback(
-    (fallbackRole = ROLES.REQUESTER) => {
-      const next = localStorage.getItem(REDIRECT_KEY);
-      localStorage.removeItem(REDIRECT_KEY);
-
+    (fallbackRole = ROLES.KR) => {
+      const next = consumeRedirect();
       const mapped = next ? mapPublicToDashboard(next) : null;
-      navigate(mapped || roleHome(fallbackRole));
+      navigate(mapped || roleHome(fallbackRole), { replace: true });
     },
-    [navigate]
+    [navigate, consumeRedirect]
   );
 
   const authenticate = useCallback(
@@ -59,7 +68,7 @@ export default function useLoginLogic() {
 
   const resetUI = useCallback(() => {
     setSubmitted(false);
-    setStatus(emptyStatus);
+    setStatus(EMPTY_STATUS);
   }, []);
 
   const handleProvider = useProviderLogin({

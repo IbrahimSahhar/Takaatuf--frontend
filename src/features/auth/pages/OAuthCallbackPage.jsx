@@ -19,19 +19,45 @@ const readRedirect = () => {
   }
 };
 
+const parseBoolParam = (value) => value === "true" || value === "1";
+
+const safeInternalPath = (value, fallback = "/") => {
+  if (!value) return fallback;
+  // allow only internal paths to prevent open redirect
+  return typeof value === "string" && value.startsWith("/") ? value : fallback;
+};
+
+const pickProfileCompleted = ({ user, profileCompletedFromQuery }) => {
+  // backend may send: profileCompleted / profile_completed
+  const fromUser = user?.profileCompleted ?? user?.profile_completed;
+
+  if (typeof fromUser === "boolean") return fromUser;
+
+  // fallback: query param (true/false/1/0)
+  if (typeof profileCompletedFromQuery === "boolean")
+    return profileCompletedFromQuery;
+
+  // default: treat as completed to avoid forcing users incorrectly
+  return true;
+};
+
 export default function OAuthCallbackPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const { login } = useAuth();
 
   useEffect(() => {
+    let cancelled = false;
+
     const run = async () => {
       const token = params.get("token");
-      const returnUrl = params.get("returnUrl") || "/";
+      const returnUrlRaw = params.get("returnUrl") || "/";
       const profileCompletedParam = params.get("profile_completed");
 
-      const profileCompleted =
-        profileCompletedParam === "true" || profileCompletedParam === "1";
+      const profileCompletedFromQuery =
+        profileCompletedParam == null
+          ? undefined
+          : parseBoolParam(profileCompletedParam);
 
       if (!token) {
         navigate(ROUTES.LOGIN, { replace: true });
@@ -39,40 +65,52 @@ export default function OAuthCallbackPage() {
       }
 
       try {
+        // Store token early so /profile uses Authorization header
         localStorage.setItem("token", token);
 
         const res = await api.get("/profile");
-        const user = res.data?.user ?? res.data;
+        const user = res.data?.user ?? res.data ?? {};
 
-        login({
-          token,
-          user: {
-            ...user,
-            role: user?.role ?? "user",
-            profileCompleted: Boolean(
-              user?.profileCompleted ??
-                user?.profile_completed ??
-                profileCompleted
-            ),
-          },
+        const profileCompleted = pickProfileCompleted({
+          user,
+          profileCompletedFromQuery,
         });
 
-        // Redirect logic
+        const normalizedUser = {
+          ...user,
+          role: user?.role ?? "user",
+          profileCompleted,
+        };
+
+        login({ token, user: normalizedUser });
+
+        if (cancelled) return;
+
         const saved = readRedirect();
         const mapped = saved ? mapPublicToDashboard(saved) : null;
 
-        const finalTarget =
-          user?.profile_completed === false || profileCompleted === false
-            ? ROUTES.COMPLETE_PROFILE
-            : mapped || returnUrl || roleHome(user?.role ?? "user");
+        const safeReturnUrl = safeInternalPath(returnUrlRaw, "/");
+
+        const finalTarget = !profileCompleted
+          ? ROUTES.COMPLETE_PROFILE
+          : mapped || safeReturnUrl || roleHome(normalizedUser.role);
 
         navigate(finalTarget, { replace: true });
       } catch {
-        navigate(ROUTES.LOGIN, { replace: true });
+        // cleanup token if profile request fails (avoids broken session)
+        try {
+          localStorage.removeItem("token");
+        } catch {}
+
+        if (!cancelled) navigate(ROUTES.LOGIN, { replace: true });
       }
     };
 
     run();
+
+    return () => {
+      cancelled = true;
+    };
   }, [params, navigate, login]);
 
   return null;

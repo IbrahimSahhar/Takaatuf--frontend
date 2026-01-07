@@ -6,7 +6,7 @@ export const LOCATION_STATUS = Object.freeze({
 
 /*
   Mock Decision Provider (single place)
- 
+ *
  Control from .env:
  VITE_LOCATION_STATUS=match | mismatch | unknown
  

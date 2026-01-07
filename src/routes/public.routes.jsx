@@ -4,15 +4,41 @@ import { ROUTES } from "../constants";
 /* Layouts */
 import PublicLayout from "../layouts/PublicLayout";
 
+/* Guards */
+import RedirectIfAuth from "../features/auth/guards/RedirectIfAuth";
+
 /* Lazy Pages */
 import { P } from "./lazyPages";
 
 export const publicRoutes = () => {
   const routes = [
-    { path: ROUTES.PUBLIC_REQUESTS, element: <P.PublicRequestsPage /> },
+    {
+      path: "/",
+      element: (
+        <RedirectIfAuth>
+          <P.PublicRequestsPage />
+        </RedirectIfAuth>
+      ),
+    },
+
+    // Public Requests list
+    {
+      path: ROUTES.PUBLIC_REQUESTS,
+      element: (
+        <RedirectIfAuth>
+          <P.PublicRequestsPage />
+        </RedirectIfAuth>
+      ),
+    },
+
+    // Public Request details
     {
       path: `${ROUTES.PUBLIC_REQUESTS}/:id`,
-      element: <P.PublicRequestDetailsPage />,
+      element: (
+        <RedirectIfAuth>
+          <P.PublicRequestDetailsPage />
+        </RedirectIfAuth>
+      ),
     },
   ];
 

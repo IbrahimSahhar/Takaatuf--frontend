@@ -1,43 +1,42 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { Container, Card, Button, Badge } from "react-bootstrap";
 import { useAuth } from "../../features/auth/context/AuthContext";
+import { ROUTES } from "../../constants/routes";
+import { storeLoginRedirectOnce } from "../../features/auth/utils/authRedirect";
+import { fullPathFromLocation } from "../../utils/navigation";
 
-/* Storage */
-const REDIRECT_KEY = "redirect_after_login";
+/* Temporary Mock Data (move outside component to avoid re-creation each render) */
+const MOCK_REQUESTS = [
+  {
+    id: "1001",
+    title: "Request #1001",
+    status: "Open",
+    summary:
+      "Placeholder request preview. This will be powered by backend data later.",
+  },
+  {
+    id: "1002",
+    title: "Request #1002",
+    status: "Open",
+    summary:
+      "Another placeholder item. Later we will add pagination and real data.",
+  },
+];
 
-export default function () {
+export default function PublicRequestsPage() {
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
-  /* Temporary Mock Data */
-  const requests = [
-    {
-      id: "1001",
-      title: "Request #1001",
-      status: "Open",
-      summary:
-        "Placeholder request preview. This will be powered by backend data later.",
-    },
-    {
-      id: "1002",
-      title: "Request #1002",
-      status: "Open",
-      summary:
-        "Another placeholder item. Later we will add pagination and real data.",
-    },
-  ];
-
   /* Helpers */
   const saveIntendedAndGoLogin = () => {
-    const intended = location.pathname + location.search + location.hash;
-    localStorage.setItem(REDIRECT_KEY, intended);
-    navigate("/login");
+    storeLoginRedirectOnce(fullPathFromLocation(location));
+    navigate(ROUTES.LOGIN);
   };
 
   /* Actions */
   const onViewDetails = (id) => {
-    navigate(`/requests/${id}`);
+    navigate(`${ROUTES.PUBLIC_REQUESTS}/${id}`);
   };
 
   const onSupport = (id) => {
@@ -66,7 +65,7 @@ export default function () {
       </div>
 
       <div className="d-grid gap-3">
-        {requests.map((r) => (
+        {MOCK_REQUESTS.map((r) => (
           <Card key={r.id} className="border-0 shadow-sm">
             <Card.Body className="p-4">
               <div className="d-flex align-items-center justify-content-between mb-2">

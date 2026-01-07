@@ -1,0 +1,153 @@
+/* =========================
+   Topbar
+========================= */
+
+.topbar {
+  background-color: #ffffff;
+}
+
+/* Logo square */
+.topbar-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background-color: var(--bs-primary);
+}
+
+/* Brand text */
+.topbar-brand {
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--bs-primary);
+}
+
+
+
+/* =========================
+   Login Page
+========================= */
+
+.login-page {
+  display: flex;
+  justify-content: center;
+  padding: 3rem 1rem; 
+  background-color: #f8fafc;
+  min-height: calc(100vh - 140px);
+}
+
+.login-page__center {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.login-page__card {
+  margin: 0 auto;
+  width: 100%;
+  max-width: 460px;
+}
+
+/* =========================
+   Login Card
+========================= */
+
+.login-card {
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* =========================
+   Login Form
+========================= */
+
+.login-label {
+  font-size: 14px;
+}
+
+.login-field {
+  position: relative;
+}
+
+/* Icon inside the input (no separate box) */
+.login-field__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #111827;
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+/* Input */
+.login-input {
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #d7dce3;
+  box-shadow: none;
+  padding-left: 44px; /* space for icon */
+}
+
+.login-input:focus {
+  box-shadow: none;
+  border-color: #6366f1;
+}
+
+/* Make bootstrap invalid state still keep our radius/height */
+.login-input.is-invalid {
+  border-radius: 12px;
+}
+
+/* Forgot password link */
+.login-forgot {
+  font-size: 13px;
+  color: #111827;
+}
+
+.login-forgot:hover {
+  text-decoration: underline;
+}
+
+/* Submit button */
+.login-submit {
+  height: 44px;
+  border-radius: 12px;
+}
+
+/* =========================
+   OAuth Buttons
+========================= */
+
+.oauth-btn {
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid #d7dce3;
+  background: #ffffff;
+  color: #111827;
+}
+
+.oauth-btn:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #111827;
+}
+.oauth-btn:hover {
+
+  color: #111827;
+}
+
+.oauth-btn__text {
+  font-size: 14px;
+}
+
+/* =========================
+   Footer
+========================= */
+
+.footer-link {
+  color: #111827;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}

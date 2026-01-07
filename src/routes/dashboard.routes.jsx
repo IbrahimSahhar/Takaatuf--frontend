@@ -2,7 +2,7 @@ import { Route, Navigate } from "react-router-dom";
 import { ROUTES } from "../constants";
 import { ROLES } from "../constants/roles";
 
-/* Layouts */
+/* Layout */
 import DashboardLayout from "../layouts/DashboardLayout";
 
 /* Guards */
@@ -11,35 +11,23 @@ import RequireRole from "../features/auth/guards/RequireRole";
 import RequireProfileComplete from "../features/auth/guards/RequireProfileComplete";
 import RequireLocationConfirmed from "../features/auth/guards/RequireLocationConfirmed";
 
-/* Auth */
-import { useAuth } from "../features/auth/context/AuthContext";
-
 /* Lazy Pages */
 import { P } from "./lazyPages";
 
-/* Helpers */
-const APP_REQUESTS = `${ROUTES.DASH_REDIRECT}/requests`;
-const APP_REQUEST_DETAILS = `${ROUTES.DASH_REDIRECT}/requests/:id`;
-
+/*
+  AppIndexRedirect
+  - When a user opens "/app" we want a predictable landing.
+  - Based on your requirement: land on "/app/requests" (NOT role dashboards).
+ */
 function AppIndexRedirect() {
-  const { role } = useAuth();
-
-  const to =
-    role === ROLES.ADMIN
-      ? ROUTES.DASH_ADMIN
-      : role === ROLES.KP
-      ? ROUTES.DASH_KP
-      : ROUTES.DASH_REQUESTER; //  KR (Outside Gaza)
-
-  return <Navigate to={to} replace />;
+  return <Navigate to={ROUTES.APP_REQUESTS} replace />;
 }
 
 export const dashboardRoutes = () => {
   const roleDashboards = [
     {
-      path: ROUTES.DASH_REQUESTER,
-      //  requester dashboard should allow KR (canonical) and REQUESTER (legacy)
-      allow: [ROLES.KR, ROLES.REQUESTER],
+      path: ROUTES.DASH_KR,
+      allow: [ROLES.KR],
       element: <P.RequesterDashboardPage />,
     },
     {
@@ -72,9 +60,10 @@ export const dashboardRoutes = () => {
         </RequireAuth>
       }
     >
-      {/* app should always land on the correct dashboard */}
+      {/* When opening "/app" -> land on "/app/requests" */}
       <Route path={ROUTES.DASH_REDIRECT} element={<AppIndexRedirect />} />
 
+      {/* Role dashboards (still accessible by direct URL) */}
       {roleDashboards.map((r) => (
         <Route
           key={r.path}
@@ -83,10 +72,10 @@ export const dashboardRoutes = () => {
         />
       ))}
 
-      {/* Requests (inside dashboard) */}
-      <Route path={APP_REQUESTS} element={<P.PublicRequestsPage />} />
+      {/* Requests (inside /app) */}
+      <Route path={ROUTES.APP_REQUESTS} element={<P.PublicRequestsPage />} />
       <Route
-        path={APP_REQUEST_DETAILS}
+        path={ROUTES.APP_REQUEST_DETAILS}
         element={<P.PublicRequestDetailsPage />}
       />
 

@@ -3,21 +3,21 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../features/auth/context/AuthContext";
 import { ROUTES } from "../../constants";
 
-/* Storage */
+/* 
+ Key used to persist the user's current location before redirecting to login
+*/
 const REDIRECT_KEY = "redirect_after_login";
 
-/* Helpers */
+/* Builds full URL path */
 const fullPath = (loc) => `${loc.pathname}${loc.search}${loc.hash}`;
 
 export default function Topbar() {
-  const { isAuthenticated, logout, user } = useAuth();
-  const { role } = useAuth();
+  const { isAuthenticated, logout, user, role } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   const isLoginPage = location.pathname === ROUTES.LOGIN;
 
-  /* Actions */
   const handleLoginClick = () => {
     if (!isLoginPage) {
       localStorage.setItem(REDIRECT_KEY, fullPath(location));
@@ -30,24 +30,16 @@ export default function Topbar() {
     navigate(ROUTES.LOGIN);
   };
 
-  const hiddenRoutes = [ROUTES.COMPLETE_PROFILE];
+  const HIDDEN_ROUTES = [ROUTES.COMPLETE_PROFILE];
+  if (HIDDEN_ROUTES.includes(location.pathname)) return null;
 
-  if (hiddenRoutes.includes(location.pathname)) {
-    return null;
-  }
   return (
-    <Navbar bg="white" className="border-bottom">
+    <Navbar bg="white" className="border-bottom topbar">
       <Container fluid className="py-2">
         {/* Brand */}
         <div className="d-flex align-items-center gap-2">
-          <div
-            className="rounded bg-primary"
-            style={{ width: 28, height: 28 }}
-            aria-hidden="true"
-          />
-          <div className="fw-bold text-primary" style={{ letterSpacing: 1 }}>
-            TAKAATUF
-          </div>
+          <div className="topbar-logo" aria-hidden="true" />
+          <div className="topbar-brand">TAKAATUF</div>
         </div>
 
         {/* Actions */}
@@ -56,7 +48,7 @@ export default function Topbar() {
             <>
               <span className="text-muted">Role:</span>
               <Badge bg="secondary">
-                {String(role || "User").toUpperCase()}
+                {String(role ?? "user").toUpperCase()}
               </Badge>
 
               <span className="text-muted small d-none d-md-inline">

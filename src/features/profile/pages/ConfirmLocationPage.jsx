@@ -83,7 +83,7 @@ export default function ConfirmLocationPage() {
         ? ROUTES.DASH_KP
         : ensuredRole === ROLES.ADMIN
         ? ROUTES.DASH_ADMIN
-        : ROUTES.DASH_REQUESTER;
+        : ROUTES.DASH_KR;
 
       navigate(target, { replace: true });
     } finally {

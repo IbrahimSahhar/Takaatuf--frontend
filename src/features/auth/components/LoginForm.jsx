@@ -1,5 +1,5 @@
-import { Form, Button, InputGroup, Spinner } from "react-bootstrap";
-import { MdEmail, MdLockOutline } from "react-icons/md";
+import { Form, Button, Spinner } from "react-bootstrap";
+import { MdOutlineEmail, MdOutlineLock } from "react-icons/md";
 
 export default function LoginForm({
   email,
@@ -14,60 +14,90 @@ export default function LoginForm({
   onSubmit,
   onForgot,
 }) {
+  const isBusy = disabled || loading;
+
   return (
-    <Form onSubmit={onSubmit}>
-      <Form.Label className="fw-semibold">Email</Form.Label>
-      <InputGroup className="mb-3">
-        <InputGroup.Text>
-          <MdEmail />
-        </InputGroup.Text>
+    <Form
+      onSubmit={(e) => {
+        if (isBusy || loading) {
+          e.preventDefault();
+          return;
+        }
+        onSubmit?.(e);
+      }}
+    >
+      {/* Email */}
+      <Form.Label className="login-label fw-semibold">Email</Form.Label>
+
+      <div className="login-field mb-3">
+        <span className="login-field__icon" aria-hidden="true">
+          <MdOutlineEmail size={18} />
+        </span>
+
         <Form.Control
           type="email"
-          placeholder="name@example.com"
+          placeholder="john.doe@example.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           isInvalid={submitted && !isEmailValid}
-          disabled={disabled}
+          disabled={isBusy}
+          autoComplete="email"
+          inputMode="email"
+          aria-invalid={isEmailValid || undefined}
+          aria-describedby="login-email-feedback"
+          className="login-input"
         />
+
         <Form.Control.Feedback type="invalid">
           Please enter a valid email address.
         </Form.Control.Feedback>
-      </InputGroup>
+      </div>
 
-      <Form.Label className="fw-semibold">Password</Form.Label>
-      <InputGroup className="mb-2">
-        <InputGroup.Text>
-          <MdLockOutline />
-        </InputGroup.Text>
+      {/* Password */}
+      <Form.Label className="login-label fw-semibold">Password</Form.Label>
+
+      <div className="login-field mb-2">
+        <span className="login-field__icon" aria-hidden="true">
+          <MdOutlineLock size={18} />
+        </span>
+
         <Form.Control
           type="password"
           placeholder="Enter your password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           isInvalid={submitted && !isPasswordValid}
-          disabled={disabled}
+          disabled={isBusy}
+          autoComplete="current-password"
+          aria-invalid={isPasswordValid || undefined}
+          aria-describedby="login-pass-feedback"
+          className="login-input"
         />
+
         <Form.Control.Feedback type="invalid">
           Password must be at least 6 characters.
         </Form.Control.Feedback>
-      </InputGroup>
+      </div>
 
-      <div className="d-flex justify-content-end mb-3">
+      {/* Forgot password */}
+      <div className="text-center mb-3">
         <Button
+          type="button"
           variant="link"
-          className="p-0 text-decoration-none"
+          className="login-forgot p-0 text-decoration-none"
           onClick={onForgot}
-          disabled={disabled}
+          disabled={isBusy}
         >
           Forgot password?
         </Button>
       </div>
 
+      {/* Sign In */}
       <Button
         type="submit"
         variant="primary"
-        className="w-100 py-2"
-        disabled={disabled}
+        className="login-submit w-100 fw-semibold"
+        disabled={isBusy}
       >
         {loading ? (
           <>

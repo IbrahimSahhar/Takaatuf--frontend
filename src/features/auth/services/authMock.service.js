@@ -1,30 +1,41 @@
 import { loadUsers, saveUsers } from "../utils/authStorage";
-import { consumeRedirect } from "../utils/authRedirect";
+import { peekRedirect } from "../utils/authRedirect";
 import { ROUTES } from "../../../constants/routes";
 import { ROLES } from "../../../constants/roles";
 
-/*
- Mock Provider Identity
- - google / facebook: normal behavior
- - cancel: for testing (throws an error with code CANCELLED)
- */
+const PROVIDER_EMAILS = {
+  google: "user@gmail.com",
+  facebook: "user@facebook.com",
+};
+
 export function getProviderIdentity(provider) {
-  // Mock cancel support (useful for AC testing)
-  if (provider === "cancel") {
+  const p = String(provider || "")
+    .toLowerCase()
+    .trim();
+
+  if (p === "cancel") {
     const err = new Error("CANCELLED");
     err.code = "CANCELLED";
     throw err;
   }
 
-  if (provider === "google")
-    return { provider: "google", email: "user@gmail.com" };
-
-  if (provider === "facebook")
-    return { provider: "facebook", email: "user@facebook.com" };
-
-  // fallback (in case a provider id is unknown)
-  return { provider: String(provider), email: "user@unknown.com" };
+  return {
+    provider: p,
+    email: PROVIDER_EMAILS[p] || "user@unknown.com",
+  };
 }
+
+/** remove query/hash to make route checks stable */
+const normalizePath = (url = "") => String(url).split(/[?#]/)[0];
+
+const deriveRoleFromNext = (next) => {
+  const path = normalizePath(next);
+
+  if (path.startsWith(ROUTES.DASH_ADMIN)) return ROLES.ADMIN;
+  if (path.startsWith(ROUTES.DASH_KP)) return ROLES.KP;
+
+  return ROLES.KR;
+};
 
 export function getOrCreateUser({ provider, email }) {
   const users = loadUsers();
@@ -32,13 +43,11 @@ export function getOrCreateUser({ provider, email }) {
 
   if (users[key]) return users[key];
 
-  const next = consumeRedirect() || "";
-  let role = ROLES.REQUESTER;
-  if (next.startsWith(ROUTES.DASH_ADMIN)) role = ROLES.ADMIN;
-  if (next.startsWith(ROUTES.DASH_KP)) role = ROLES.KP;
+  const next = peekRedirect() || "";
+  const role = deriveRoleFromNext(next);
 
   const newUser = {
-    id: Date.now(),
+    id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
     name:
       provider === "google"
         ? "Google User"
@@ -48,7 +57,7 @@ export function getOrCreateUser({ provider, email }) {
     email,
     provider,
     role,
-    profile_complete: false, // ensures new user must complete profile
+    profileCompleted: false,
   };
 
   users[key] = newUser;

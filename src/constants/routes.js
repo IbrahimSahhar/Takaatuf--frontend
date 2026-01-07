@@ -1,27 +1,31 @@
 export const ROUTES = Object.freeze({
-  // Public
+  /* Public routes */
   HOME: "/",
   PUBLIC_REQUESTS: "/requests",
 
-  // Auth
+  /* Authentication routes */
   LOGIN: "/login",
   COMPLETE_PROFILE: "/complete-profile",
   CONFIRM_LOCATION: "/confirm-location",
 
-  // Shared (inside dashboard)
+  /* Shared authenticated routes inside /app */
+  DASH_REDIRECT: "/app",
+
+  // Authenticated requests (the mapped destination)
+  APP_REQUESTS: "/app/requests",
+  APP_REQUEST_DETAILS: "/app/requests/:id",
+
+  /* Other shared routes */
   PROFILE: "/app/profile",
   NOTIFICATIONS: "/app/notifications",
   KRS: "/app/krs",
 
-  // Dashboards
-  DASH_REDIRECT: "/app",
-  DASH_REQUESTER: "/app/dashboard/requester",
+  /* Dashboard entry points by role */
+  DASH_KR: "/app/dashboard/requester",
   DASH_KP: "/app/dashboard/kp",
   DASH_ADMIN: "/app/dashboard/admin",
 
-  DASH_KR: "/app/dashboard/requester",
-
-  // System
+  /* System routes */
   FORBIDDEN: "/403",
   NOT_FOUND: "*",
 });

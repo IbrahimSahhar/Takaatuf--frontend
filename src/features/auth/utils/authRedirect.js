@@ -4,27 +4,39 @@ import { ROLES } from "../../../constants/roles";
 const REDIRECT_KEY = "redirect_after_login";
 const PROFILE_REDIRECT_KEY = "redirect_after_profile";
 
-const fullPath = (path) => (path ? String(path) : path);
-
 export const APP_BASE = ROUTES.DASH_REDIRECT || "/app";
-export const APP_REQUESTS = `${APP_BASE}/requests`;
+export const APP_REQUESTS = ROUTES.APP_REQUESTS || `${APP_BASE}/requests`;
 
+const normalizePath = (path) => (path ? String(path) : "");
+
+/* Map known public URLs to their /app equivalent.
+   Returns null when there is no known mapping.
+ */
 export function mapPublicToDashboard(path) {
-  const p = fullPath(path);
-  if (!p) return p;
+  const p = normalizePath(path);
+  if (!p) return null;
 
-  // /requests OR /requests?x=1
+  const HOME = ROUTES.HOME || "/";
+
+  // "/" => "/app/requests"
+  if (p === HOME) return APP_REQUESTS;
+
+  // "/requests" + query/hash => "/app/requests"
   if (
     p === ROUTES.PUBLIC_REQUESTS ||
-    p.startsWith(`${ROUTES.PUBLIC_REQUESTS}?`)
+    p.startsWith(`${ROUTES.PUBLIC_REQUESTS}?`) ||
+    p.startsWith(`${ROUTES.PUBLIC_REQUESTS}#`)
   ) {
     return APP_REQUESTS;
   }
 
-  // /requests/:id OR /requests/:id?x=1
-  if (p.startsWith(`${ROUTES.PUBLIC_REQUESTS}/`)) return `${APP_BASE}${p}`;
+  // "/requests/:id..." => "/app/requests/:id..."
+  if (p.startsWith(`${ROUTES.PUBLIC_REQUESTS}/`)) {
+    return `${APP_BASE}${p}`;
+  }
 
-  return p;
+  // no mapping
+  return null;
 }
 
 export function isPublicRequestsPath(pathname = "") {
@@ -34,31 +46,33 @@ export function isPublicRequestsPath(pathname = "") {
   );
 }
 
-/**
-  Canonical role landing:
- - ADMIN -> admin dashboard
- - KP (Gaza) -> KP dashboard
- - KR (Outside Gaza) -> requester dashboard (for now)
- 
-  Backward compatible:
-- REQUESTER -> same as KR
- */
 export function roleHome(role) {
   switch (String(role || "").toLowerCase()) {
     case ROLES.ADMIN:
       return ROUTES.DASH_ADMIN;
-
     case ROLES.KP:
       return ROUTES.DASH_KP;
-
-    //  Outside Gaza
     case ROLES.KR:
-    case ROLES.REQUESTER: // backward compatibility
     default:
-      return ROUTES.DASH_REQUESTER;
+      return ROUTES.DASH_KR;
   }
 }
 
+/* -----------------------------
+   Peek (read-only)
+------------------------------ */
+export const peekRedirect = () => localStorage.getItem(REDIRECT_KEY);
+export const peekProfileRedirect = () =>
+  localStorage.getItem(PROFILE_REDIRECT_KEY);
+
+export const peekNextRedirect = () =>
+  localStorage.getItem(PROFILE_REDIRECT_KEY) ||
+  localStorage.getItem(REDIRECT_KEY) ||
+  null;
+
+/* -----------------------------
+   Consume (read + clear)
+------------------------------ */
 export function consumeRedirect() {
   const next = localStorage.getItem(REDIRECT_KEY);
   localStorage.removeItem(REDIRECT_KEY);
@@ -70,5 +84,31 @@ export function consumeProfileRedirect() {
   localStorage.removeItem(PROFILE_REDIRECT_KEY);
   return next;
 }
+
+export function consumeNextRedirect() {
+  const nextRaw = peekNextRedirect();
+  if (!nextRaw) return null;
+
+  localStorage.removeItem(PROFILE_REDIRECT_KEY);
+  localStorage.removeItem(REDIRECT_KEY);
+
+  return nextRaw;
+}
+
+/* -----------------------------
+   Store helpers
+------------------------------ */
+const hasAnyRedirect = () => Boolean(peekProfileRedirect() || peekRedirect());
+
+export function storeLoginRedirectOnce(target) {
+  if (!target || hasAnyRedirect()) return;
+  localStorage.setItem(REDIRECT_KEY, String(target));
+}
+
+export function storeProfileRedirectOnce(target) {
+  if (!target || hasAnyRedirect()) return;
+  localStorage.setItem(PROFILE_REDIRECT_KEY, String(target));
+}
+export const storeRedirectOnce = storeLoginRedirectOnce;
 
 export { REDIRECT_KEY, PROFILE_REDIRECT_KEY };

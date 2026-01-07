@@ -7,7 +7,7 @@ const APP_REQUESTS = `${APP_BASE}/requests`;
 /* Sidebar Links by Role */
 export const sidebarLinksByRole = {
   requester: [
-    { to: ROUTES.DASH_REQUESTER, label: "Requester Dashboard" },
+    { to: ROUTES.DASH_KR, label: "Requester Dashboard" },
     { to: APP_REQUESTS, label: "Public Requests" },
     { to: ROUTES.PROFILE, label: "Profile" },
     { to: ROUTES.KRS, label: "My KRs" },

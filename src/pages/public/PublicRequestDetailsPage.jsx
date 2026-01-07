@@ -1,9 +1,9 @@
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Container, Card, Button, Badge } from "react-bootstrap";
 import { useAuth } from "../../features/auth/context/AuthContext";
-
-/* Storage */
-const REDIRECT_KEY = "redirect_after_login";
+import { ROUTES } from "../../constants/routes";
+import { storeLoginRedirectOnce } from "../../features/auth/utils/authRedirect";
+import { fullPathFromLocation } from "../../utils/navigation";
 
 export default function PublicRequestDetailsPage() {
   const { id } = useParams();
@@ -12,15 +12,14 @@ export default function PublicRequestDetailsPage() {
   const location = useLocation();
 
   const requireLoginThenReturn = () => {
-    const intended = location.pathname + location.search + location.hash;
-    localStorage.setItem(REDIRECT_KEY, intended);
-    navigate("/login");
+    storeLoginRedirectOnce(fullPathFromLocation(location));
+    navigate(ROUTES.LOGIN);
   };
 
   const onSupport = () => {
     if (!isAuthenticated) return requireLoginThenReturn();
 
-    /* Later: open a payment modal or navigate to the payment page */
+    // Later: open a payment modal or navigate to the payment page
     alert("Support flow (Coming soon)");
   };
 
@@ -44,7 +43,7 @@ export default function PublicRequestDetailsPage() {
             </Button>
             <Button
               variant="outline-secondary"
-              onClick={() => navigate("/requests")}
+              onClick={() => navigate(ROUTES.PUBLIC_REQUESTS)}
             >
               Back to Requests
             </Button>
